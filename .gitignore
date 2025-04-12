@@ -5,3 +5,6 @@
 # slack
 /slack/node_modules
 /slack/.env
+
+# mock
+/mock
