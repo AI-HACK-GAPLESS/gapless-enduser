@@ -10,12 +10,12 @@ const SENTENCE = {
   EXPLAIN: "EXPLAIN!",
   RESPONSE: (input, output) => `
 Input Text:
-\`\`\`md
+\`\`\`
 ${input}
 \`\`\`
 
 Explanation:
-\`\`\`md
+\`\`\`
 ${output}
 \`\`\`
   `,
@@ -26,25 +26,6 @@ ${output}
 };
 
 // ------------------------------------------------------------------------------------
-
-const stripCodeBlock = (text) => {
-  const regex = /^```(?:md)?\n([\s\S]*?)```$/;
-  const match = text.match(regex);
-  const result = match ? match[1] : text;
-  return result.trim();
-};
-
-
-const parseInputOutput = (_result) => {
-  let [text, ...result] = _result.split('Explanation:');
-  text = stripCodeBlock(text.split('Input Text:')[1].trim());
-  result = stripCodeBlock(result.at(-1).trim());
-
-  return { text, result }
-}
-
-// ------------------------------------------------------------------------------------
-
 
 // ✅ Slack App Configuration
 const app = new App({
@@ -68,8 +49,8 @@ function buildMessageBlocks(text, explanation) {
       text: {
         type: "mrkdwn",
         text: SENTENCE.RESPONSE(text, explanation),
-        verbatim: false
-      }
+        verbatim: false,
+      },
     },
     {
       type: "actions",
@@ -79,28 +60,33 @@ function buildMessageBlocks(text, explanation) {
           text: {
             type: "plain_text",
             emoji: true,
-            text: SENTENCE.EXPLAIN_MORE
+            text: SENTENCE.EXPLAIN_MORE,
           },
           value: JSON.stringify({
             text,
-            previous_explanation: explanation
+            previous_explanation: explanation,
           }),
-          action_id: "explain_more"
-        }
-      ]
-    }
+          action_id: "explain_more",
+        },
+      ],
+    },
   ];
 }
 
 // 🔸 Utility: Request explanation from FastAPI
 async function postExplain({ text }) {
-  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", { text });
+  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", {
+    text,
+  });
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
 }
 
 async function postExplainMore({ text, result }) {
-  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain-more", { text, result });
+  const { data } = await axios.post(
+    process.env.FASTAPI_URL + "/api/explain-more",
+    { text, result }
+  );
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
 }
@@ -127,7 +113,7 @@ async function handleSlashCommand(req, res) {
 
 // 🔹 Handler: Message Shortcut
 async function handleShortcut(req, res, payload) {
-  const messageText = payload.message.text.replace(/[•\-\*#]/g, '');
+  const messageText = payload.message.text.replace(/[•\-\*#]/g, "");
   const responseUrl = payload.response_url;
 
   res.status(200).send(); // Immediate response to Slack
@@ -137,14 +123,14 @@ async function handleShortcut(req, res, payload) {
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       blocks: buildMessageBlocks(messageText, result),
-      replace_original: false
+      replace_original: false,
     });
   } catch (error) {
     console.error("Shortcut error:", error);
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       text: SENTENCE.ERROR,
-      replace_original: false
+      replace_original: false,
     });
   }
 }
@@ -160,22 +146,21 @@ async function handleButton(req, res, payload) {
   try {
     let result;
     if (previous_explanation) {
-      result = await postExplainMore(parseInputOutput(text));
-    }
-    else {
+      result = await postExplainMore({text, result: previous_explanation});
+    } else {
       result = await postExplain({ text });
     }
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       blocks: buildMessageBlocks(text, result),
-      replace_original: true
+      replace_original: true,
     });
   } catch (error) {
     console.error("Button error:", error);
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       text: SENTENCE.ERROR,
-      replace_original: true
+      replace_original: true,
     });
   }
 }
@@ -192,7 +177,10 @@ expressApp.post("/", async (req, res) => {
     if (req.body.payload) {
       const payload = JSON.parse(req.body.payload);
 
-      if (payload.type === "message_action" && payload.callback_id === "gapless_explain") {
+      if (
+        payload.type === "message_action" &&
+        payload.callback_id === "gapless_explain"
+      ) {
         return await handleShortcut(req, res, payload);
       }
 
