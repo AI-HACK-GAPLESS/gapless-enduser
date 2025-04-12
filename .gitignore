@@ -1,3 +1,7 @@
+# common
+.DS_Store
+/node_modules
+
 # discord
 /discord/node_modules
 /discord/.env
@@ -5,8 +9,6 @@
 # slack
 /slack/node_modules
 /slack/.env
-
-.DS_Store
 
 # mock
 /mock
