@@ -155,7 +155,12 @@ client.on('interactionCreate', async (interaction) => {
 const commands = [
   new SlashCommandBuilder()
     .setName('explain')
-    .setDescription(SENTENCE.LOADING),
+    .setDescription(SENTENCE.LOADING)
+    .addStringOption(option =>
+      option.setName('text')
+        .setDescription('Input text to explain')
+        .setRequired(true)
+    ),
   new ContextMenuCommandBuilder()
     .setName(SENTENCE.EXPLAIN)
     .setType(ApplicationCommandType.Message)
@@ -186,20 +191,7 @@ client.on('interactionCreate', async interaction => {
   }
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'explain') {
-    let text = interaction.options.getString('text');
-    // 답글인 경우: 참조 메시지 가져오기
-    if (!text && interaction.channel && interaction.replied) {
-      const repliedMsg = await interaction.channel.messages.fetch(interaction.targetId); // 슬래시 명령에서 reply 대상 ID 가져오기
-      text = repliedMsg?.content;
-    }
-
-    if (!text) {
-      await interaction.reply({
-        content: SENTENCE.NO_TEXT,
-        ephemeral: true,
-      });
-      return;
-    }
+    const text = interaction.options.getString('text');
 
     await interaction.deferReply({ ephemeral: true });
 
