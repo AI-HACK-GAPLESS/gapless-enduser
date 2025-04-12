@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "concurrently -n DISCORD,SLACK -c blue,green \"node ./discord/index.js\" \"node ./slack/index.js\""
+    "start": "concurrently -n DISCORD,SLACK -c blue,green \"node ./discord/index.js\" \"node ./slack/index.js\"",
+    "start:slack": "node ./slack/index.js",
+    "start:discord": "node ./discord/index.js"
   },
   "repository": {
     "type": "git",
