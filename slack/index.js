@@ -4,14 +4,47 @@ const axios = require("axios");
 require("dotenv").config();
 
 // 🔸 Constants and Templates
+// ------------------------------------------------------------------------------------
+
 const SENTENCE = {
   EXPLAIN: "EXPLAIN!",
-  RESPONSE: (input, output) => `\`\`\`📝 *Input Text:*\n${input}\n\n💡 *Explanation:*\n${output}\`\`\``,
+  RESPONSE: (input, output) => `
+Input Text:
+\`\`\`md
+${input}
+\`\`\`
+
+Explanation:
+\`\`\`md
+${output}
+\`\`\`
+  `,
   ERROR: "❌ Sorry. Error occurred. Please try again.",
-  LOADING: "LOADING...",
+  LOADING: "LOADING…",
   EXPLAIN_MORE: "Explain more!",
-  NO_TEXT: "❗Please provide a text like: \`/gapless Hello World\`",
+  NO_TEXT: "❗Please provide a text like: `/explain Hello World`",
 };
+
+// ------------------------------------------------------------------------------------
+
+const stripCodeBlock = (text) => {
+  const regex = /^```(?:md)?\n([\s\S]*?)```$/;
+  const match = text.match(regex);
+  const result = match ? match[1] : text;
+  return result.trim();
+};
+
+
+const parseInputOutput = (_result) => {
+  let [text, ...result] = _result.split('Explanation:');
+  text = stripCodeBlock(text.split('Input Text:')[1].trim());
+  result = stripCodeBlock(result.at(-1).trim());
+
+  return { text, result }
+}
+
+// ------------------------------------------------------------------------------------
+
 
 // ✅ Slack App Configuration
 const app = new App({
@@ -60,9 +93,14 @@ function buildMessageBlocks(text, explanation) {
 }
 
 // 🔸 Utility: Request explanation from FastAPI
-async function fetchExplanation(text, previous = null) {
-  const payload = previous ? { text, previous_explanation: previous } : { text };
-  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", payload);
+async function postExplain({ text }) {
+  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", { text });
+  if (!data.result) throw new Error("No explanation returned");
+  return data.result;
+}
+
+async function postExplainMore({ text, result }) {
+  const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain-more", { text, result });
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
 }
@@ -76,7 +114,7 @@ async function handleSlashCommand(req, res) {
   }
 
   try {
-    const result = await fetchExplanation(text);
+    const result = await postExplain({ text });
     return res.json({
       response_type: "ephemeral",
       blocks: buildMessageBlocks(text, result),
@@ -95,7 +133,7 @@ async function handleShortcut(req, res, payload) {
   res.status(200).send(); // Immediate response to Slack
 
   try {
-    const result = await fetchExplanation(messageText);
+    const result = await postExplain({ text: messageText });
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       blocks: buildMessageBlocks(messageText, result),
@@ -120,7 +158,13 @@ async function handleButton(req, res, payload) {
   res.status(200).send(); // Respond immediately
 
   try {
-    const result = await fetchExplanation(text, previous_explanation);
+    let result;
+    if (previous_explanation) {
+      result = await postExplainMore(parseInputOutput(text));
+    }
+    else {
+      result = await postExplain({ text });
+    }
     await axios.post(responseUrl, {
       response_type: "ephemeral",
       blocks: buildMessageBlocks(text, result),
