@@ -3,6 +3,7 @@ const {
   Routes,
   Client,
   ButtonStyle,
+  EmbedBuilder,
   ButtonBuilder,
   ActionRowBuilder,
   GatewayIntentBits,
@@ -34,6 +35,10 @@ ${output}
   LOADING: "LOADING…",
   EXPLAIN_MORE: "Explain more!",
   NO_TEXT: "❗Please provide a text like: `/explain Hello World`",
+  INTRODUCTION: {
+    TITLE: "👋 Hello! I’m your **AI-Powered Explanation Bot**.",
+    DESCRIPTION: "I’m your **AI-Powered Explanation Bot**. I can help you understand complex texts and provide detailed explanations. Just use the `/explain` command or right-click on any message to get started!",
+  },
 };
 
 // ------------------------------------------------------------------------------------
@@ -161,6 +166,12 @@ const commands = [
         .setDescription('Input text to explain')
         .setRequired(true)
     ),
+  new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Setup the bot'),
+  new SlashCommandBuilder()
+    .setName('dict')
+    .setDescription('Add custom dictionary'),
   new ContextMenuCommandBuilder()
     .setName(SENTENCE.EXPLAIN)
     .setType(ApplicationCommandType.Message)
@@ -196,6 +207,42 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply({ ephemeral: true });
 
     await postExplain({ text, interaction });
+  }
+  if (interaction.commandName === 'setup') {
+    await interaction.deferReply({ ephemeral: true });
+    await interaction.editReply({
+      content: `🛠️ Please [click here](https://your-setup-page.com/discord?serverId=${interaction.guildId}) to set up your custom dictionary.`,
+      components: [row]
+    });
+  }
+  if (interaction.commandName === 'dict') {
+  }
+});
+
+client.on('guildCreate', async (guild) => {
+  try {
+    // 1. 봇이 접근할 수 있는 텍스트 채널 중 첫 번째 찾기
+    const channel = guild.channels.cache.find(
+      (ch) =>
+        ch.type === 0 && // ChannelType.GuildText (숫자 0)
+        ch.permissionsFor(guild.members.me).has('SendMessages')
+    );
+
+    if (!channel) return;
+
+    // 2. 인사 메시지 전송
+    await channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0x5865F2)
+          .setTitle(SENTENCE.INTRODUCTION.TITLE)
+          .setDescription(SENTENCE.INTRODUCTION.DESCRIPTION)
+      ]
+    });
+
+    console.log(`📥 봇이 새 서버에 초대됨: ${ guild.name }`);
+  } catch (err) {
+    console.error('인사 메시지 전송 실패:', err);
   }
 });
 
