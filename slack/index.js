@@ -83,8 +83,9 @@ function buildMessageBlocks(text, explanation) {
 // 🔸 Utility: Request explanation from FastAPI
 async function postExplain({ text }) {
   const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", {
-    text,
-    platform: 'slack',
+    server_id: "1",
+    text: text.trim(),
+    platform: 'slack'
   });
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
@@ -93,7 +94,12 @@ async function postExplain({ text }) {
 async function postExplainMore({ text, result }) {
   const { data } = await axios.post(
     process.env.FASTAPI_URL + "/api/explain-more",
-    { text, result }
+    { 
+      server_id: "1",
+      text: text.trim(),
+      result,
+      platform: 'slack'
+    }
   );
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
