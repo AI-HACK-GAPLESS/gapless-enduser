@@ -37,7 +37,7 @@ ${output}
   NO_TEXT: "❗Please provide a text like: `/explain Hello World`",
   INTRODUCTION: {
     TITLE: "👋 Hello! I’m your **AI-Powered Explanation Bot**.",
-    DESCRIPTION: "I’m your **AI-Powered Explanation Bot**. I can help you understand complex texts and provide detailed explanations. Just use the `/explain` command or right-click on any message to get started!",
+    DESCRIPTION: "\nI can help you understand complex texts and provide detailed explanations.\n\n- Just use the `/explain` command or\n- *right-click* on any message to get started!",
   },
 };
 
@@ -73,6 +73,7 @@ const postExplain = async ({ text, interaction }) => {
       body: JSON.stringify({
         text,
         platform: 'discord',
+        server_id: interaction.guildId,
         // userId: interaction.user.id,
         // messageId: interaction.id
       }),
@@ -105,7 +106,14 @@ const postExplainMore = async ({ text, result, interaction }) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text, result, userId: interaction.user.id, messageId: interaction.id }),
+      body: JSON.stringify({
+        text,
+        result,
+        platform: 'discord',
+        server_id: interaction.guildId,
+        // userId: interaction.user.id,
+        // messageId: interaction.id
+      }),
     });
 
     if (!response.ok) {
@@ -211,11 +219,14 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'setup') {
     await interaction.deferReply({ ephemeral: true });
     await interaction.editReply({
-      content: `🛠️ Please [click here](https://your-setup-page.com/discord?serverId=${interaction.guildId}) to set up your custom dictionary.`,
-      components: [row]
+      content: `🛠️ Please [click here](https://gapless.vercel.app/setup/${interaction.guildId}) to set up your custom server.`,
     });
   }
   if (interaction.commandName === 'dict') {
+    await interaction.deferReply({ ephemeral: true });
+    await interaction.editReply({
+      content: `🛠️ Please [click here](https://gapless.vercel.app/dict/${interaction.guildId}) to set up your custom dictionary.`,
+    });
   }
 });
 
@@ -240,7 +251,7 @@ client.on('guildCreate', async (guild) => {
       ]
     });
 
-    console.log(`📥 봇이 새 서버에 초대됨: ${ guild.name }`);
+    console.log(`📥 봇이 새 서버에 초대됨: ${guild.name}`);
   } catch (err) {
     console.error('인사 메시지 전송 실패:', err);
   }
