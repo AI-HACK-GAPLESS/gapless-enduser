@@ -26,6 +26,10 @@ ${output}
   LOADING: "LOADING…",
   EXPLAIN_MORE: "Explain more!",
   NO_TEXT: "❗Please provide a text like: `/explain Hello World`",
+  INTRODUCTION: {
+    TITLE: "👋 Hello! I'm your AI-Powered Explanation Bot.",
+    DESCRIPTION: "\nI can help you understand complex texts and provide detailed explanations.\n\n- Just use the `/explain` command or\n- *right-click* on any message to get started!",
+  },
 };
 
 // ------------------------------------------------------------------------------------
@@ -171,7 +175,14 @@ async function handleButton(req, res, payload) {
 
 // 🔸 Main Router
 expressApp.post("/", async (req, res) => {
+  console.log('req', req.body)
   try {
+    // URL 검증 요청 처리
+    if (req.body.type === "url_verification") {
+      console.log(req.body.type);
+      return res.json({ challenge: req.body.challenge });
+    }
+
     // Slash command
     if (req.body.command === "/explain") {
       return await handleSlashCommand(req, res);
@@ -191,6 +202,36 @@ expressApp.post("/", async (req, res) => {
       if (payload.actions && payload.actions[0].action_id === "explain_more") {
         return await handleButton(req, res, payload);
       }
+    }
+
+    // member_joined_channel 이벤트 처리
+    if (req.body?.event?.type === 'member_joined_channel') {
+      const event = req.body.event;
+      try {
+        await app.client.chat.postMessage({
+          channel: event.channel,
+          blocks: [
+            {
+              type: "header",
+              text: {
+                type: "plain_text",
+                text: SENTENCE.INTRODUCTION.TITLE,
+                emoji: true
+              }
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: SENTENCE.INTRODUCTION.DESCRIPTION
+              }
+            }
+          ]
+        });
+      } catch (error) {
+        console.error('Error sending welcome message:', error);
+      }
+      return res.status(200).send();
     }
 
     res.status(200).end();
