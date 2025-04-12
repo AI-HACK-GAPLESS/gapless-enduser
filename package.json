@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/AI-HACK-GAPLESS/gapless-enduser/issues"
   },
-  "homepage": "https://github.com/AI-HACK-GAPLESS/gapless-enduser#readme"
+  "homepage": "https://github.com/AI-HACK-GAPLESS/gapless-enduser#readme",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
