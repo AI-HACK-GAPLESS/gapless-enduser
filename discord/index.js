@@ -93,7 +93,7 @@ const postExplain = async ({ text, interaction }) => {
   }
 }
 
-async function postExplainMore({ text, result, interaction }) {
+const postExplainMore = async ({ text, result, interaction }) => {
   try {
     const response = await fetch(process.env.FASTAPI_URL + '/api/explain-more', {
       method: 'POST',
