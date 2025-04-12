@@ -6,5 +6,7 @@
 /slack/node_modules
 /slack/.env
 
+.DS_Store
+
 # mock
 /mock
