@@ -207,29 +207,33 @@ expressApp.post("/", async (req, res) => {
     // member_joined_channel 이벤트 처리
     if (req.body?.event?.type === 'member_joined_channel') {
       const event = req.body.event;
-      try {
-        await app.client.chat.postMessage({
-          channel: event.channel,
-          blocks: [
-            {
-              type: "header",
-              text: {
-                type: "plain_text",
-                text: SENTENCE.INTRODUCTION.TITLE,
-                emoji: true
+      
+      // 이벤트 ID를 확인하여 중복 처리 방지
+      if (event.user === app.botUserId) {  // 봇이 채널에 추가된 경우에만 처리
+        try {
+          await app.client.chat.postMessage({
+            channel: event.channel,
+            blocks: [
+              {
+                type: "header",
+                text: {
+                  type: "plain_text",
+                  text: SENTENCE.INTRODUCTION.TITLE,
+                  emoji: true
+                }
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: SENTENCE.INTRODUCTION.DESCRIPTION
+                }
               }
-            },
-            {
-              type: "section",
-              text: {
-                type: "mrkdwn",
-                text: SENTENCE.INTRODUCTION.DESCRIPTION
-              }
-            }
-          ]
-        });
-      } catch (error) {
-        console.error('Error sending welcome message:', error);
+            ]
+          });
+        } catch (error) {
+          console.error('Error sending welcome message:', error);
+        }
       }
       return res.status(200).send();
     }
