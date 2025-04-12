@@ -1,4 +1,3 @@
-require('dotenv').config();
 const {
   REST,
   Routes,
@@ -11,6 +10,10 @@ const {
   ApplicationCommandType,
   ContextMenuCommandBuilder,
 } = require('discord.js');
+
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 
 // ------------------------------------------------------------------------------------
 

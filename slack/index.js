@@ -1,7 +1,10 @@
 const { App } = require("@slack/bolt");
 const express = require("express");
 const axios = require("axios");
-require("dotenv").config();
+
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 
 // 🔸 Constants and Templates
 // ------------------------------------------------------------------------------------
