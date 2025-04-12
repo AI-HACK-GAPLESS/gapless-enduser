@@ -62,7 +62,12 @@ const postExplain = async ({ text, interaction }) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text, userId: interaction.user.id, messageId: interaction.id }),
+      body: JSON.stringify({
+        text,
+        platform: 'discord',
+        // userId: interaction.user.id,
+        // messageId: interaction.id
+      }),
     });
 
     if (!response.ok) {
