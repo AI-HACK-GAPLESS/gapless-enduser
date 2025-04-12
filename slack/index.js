@@ -77,6 +77,7 @@ function buildMessageBlocks(text, explanation) {
 async function postExplain({ text }) {
   const { data } = await axios.post(process.env.FASTAPI_URL + "/api/explain", {
     text,
+    platform: 'slack',
   });
   if (!data.result) throw new Error("No explanation returned");
   return data.result;
