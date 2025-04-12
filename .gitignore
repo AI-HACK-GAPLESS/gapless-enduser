@@ -1,0 +1,7 @@
+# discord
+/discord/node_modules
+/discord/.env
+
+# slack
+/slack/node_modules
+/slack/.env
